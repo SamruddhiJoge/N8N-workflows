@@ -1,0 +1,408 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "inputText": "={{ $json.text }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "customer support",
+              "description": "an email that is related to helping out a customer. They may be asking questions about our policies or questions about our product or services."
+            },
+            {
+              "category": "others",
+              "description": "any email that is not customer support related"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        320
+      ],
+      "id": "a6c50ddd-fa69-4a9b-bdb5-8b33418a8224",
+      "name": "Text Classifier"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        320,
+        544
+      ],
+      "id": "39fa6f6c-c5df-4fe1-adba-e02f2d086e93",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "70Fv2Z5nXusjci5N",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Gmail Trigger').item.json.text }}",
+        "options": {
+          "systemMessage": "=##overview \nYou are a helpful assistant for JetaTech. Your job is to respond to incoming emails with relevant information using your knowledgeBase tools.\n\n## instructions\n-your output should be friendly.\n-sign off as Samruddhi Joge Intern from JetaTech.\n\n##output\n-output only the content in the body of email."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        624,
+        -96
+      ],
+      "id": "d11d0ef2-47ec-4c0e-abdc-51ba4299e5d5",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        592,
+        128
+      ],
+      "id": "0328b9dd-b31d-47aa-963e-0890d2e418a2",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "70Fv2Z5nXusjci5N",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "call this toll to access policy and FAQ information",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "sample",
+          "mode": "list",
+          "cachedResultName": "sample"
+        },
+        "options": {
+          "pineconeNamespace": "FAQ"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        720,
+        128
+      ],
+      "id": "cf33fd26-a604-475e-8974-5997d272f506",
+      "name": "KnowledgeBase",
+      "credentials": {
+        "pineconeApi": {
+          "id": "NUSqRCDOMozWKOMY",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        16,
+        320
+      ],
+      "id": "8a3cb2c8-58b5-4cbd-ae33-ffa9d3f20382",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "IFKJTimzcMc6kEOC",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-embedding-001"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        800,
+        336
+      ],
+      "id": "15b385c8-1bd0-4103-b407-c14652e1091a",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "70Fv2Z5nXusjci5N",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "emailType": "text",
+        "message": "={{ $json.output }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1312,
+        112
+      ],
+      "id": "51dd650c-e586-4142-b6ad-695ba36533cb",
+      "name": "Reply to a message",
+      "webhookId": "aa8b997f-668b-4b64-ad04-e6fba4b8c8e4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "IFKJTimzcMc6kEOC",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": [
+          "Label_8361545662629278158"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1088,
+        112
+      ],
+      "id": "95527289-881d-4dbf-8e9f-5c0e265affc2",
+      "name": "Add label to message",
+      "webhookId": "054ed38f-0602-4125-9b38-cfbcc47f544d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "IFKJTimzcMc6kEOC",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1WbbsCmGy-Fc3QuDvGMwzlescPjeWJp8A_2jSHVQeQDc",
+          "mode": "list",
+          "cachedResultName": "customer support",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WbbsCmGy-Fc3QuDvGMwzlescPjeWJp8A_2jSHVQeQDc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1867036756,
+          "mode": "list",
+          "cachedResultName": "replies",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WbbsCmGy-Fc3QuDvGMwzlescPjeWJp8A_2jSHVQeQDc/edit#gid=1867036756"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1536,
+        112
+      ],
+      "id": "44aa43f6-afd0-4189-934a-886998c08223",
+      "name": "replies to mail",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "9kf2qf534uDkVlL1",
+          "name": "Google Sheets account 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1WbbsCmGy-Fc3QuDvGMwzlescPjeWJp8A_2jSHVQeQDc",
+          "mode": "list",
+          "cachedResultName": "customer support",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WbbsCmGy-Fc3QuDvGMwzlescPjeWJp8A_2jSHVQeQDc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WbbsCmGy-Fc3QuDvGMwzlescPjeWJp8A_2jSHVQeQDc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        736,
+        512
+      ],
+      "id": "118aff61-2c31-4752-91ac-18f9cbec4525",
+      "name": "other mails",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "9kf2qf534uDkVlL1",
+          "name": "Google Sheets account 5"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "other mails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Add label to message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "KnowledgeBase": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "KnowledgeBase",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply to a message": {
+      "main": [
+        [
+          {
+            "node": "replies to mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add label to message": {
+      "main": [
+        [
+          {
+            "node": "Reply to a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4e5fa7eb547214ab59ffd26fe5942dab8ace36d08eb972dd5931595582d40856"
+  }
+}
